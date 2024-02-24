@@ -22,6 +22,11 @@ class ProjectInline(admin.TabularInline):
     extra = 1
 
 
+@admin.register(PersonalInfo)
+class PersonalInfoAdmin(admin.ModelAdmin):
+    list_display = [field.name for field in PersonalInfo._meta.fields]
+
+
 @admin.register(CV)
 class CVAdmin(admin.ModelAdmin):
     inlines = [EducationInline, ExperienceInline, SkillInline, ProjectInline]
