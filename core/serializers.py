@@ -11,29 +11,30 @@ class PersonalInfoSerializer(serializers.ModelSerializer):
 class EducationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Education
-        fields = '__all__'
+        fields = ('degree', 'school_name', 'start_year', 'end_year', 'description')
 
 
 class ExperienceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Experience
-        fields = '__all__'
+        fields = ('job_title', 'company_name', 'start_year', 'end_year', 'description')
 
 
 class SkillSerializer(serializers.ModelSerializer):
     class Meta:
         model = Skill
-        fields = '__all__'
+        fields = ('skill_name', 'skill_level')
 
 
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = '__all__'
+        fields = ('project_name', 'description', 'start_year', 'end_year')
 
 
 class CVSerializer(serializers.ModelSerializer):
     personal_info = PersonalInfoSerializer()
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     education = EducationSerializer(many=True, required=False)
     experience = ExperienceSerializer(many=True, required=False)
     skills = SkillSerializer(many=True, required=False)
@@ -44,33 +45,34 @@ class CVSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
+        user = self.context['request'].user
+
+        if not user.is_authenticated:
+            raise serializers.ValidationError("Authentication is required to create a CV.")
+
         personal_info_data = validated_data.pop('personal_info', None)
-        personal_info = PersonalInfoSerializer.create(PersonalInfoSerializer(),
-                                                      validated_data=personal_info_data) if personal_info_data else None
+        personal_info_instance = self._create_personal_info(personal_info_data)
 
-        education_data = validated_data.pop('education', None)
-        education = [EducationSerializer.create(EducationSerializer(), validated_data=edu) for edu in
-                     education_data] if education_data else None
+        cv_instance = CV.objects.create(
+            personal_info=personal_info_instance,
+            user=user,
+            title=validated_data.get('title', ''),
+            description=validated_data.get('description', '')
+        )
 
-        experience_data = validated_data.pop('experience', None)
-        experience = [ExperienceSerializer.create(ExperienceSerializer(), validated_data=exp) for exp in
-                      experience_data] if experience_data else None
+        self._create_related_objects(cv_instance, 'education', Education, validated_data)
+        self._create_related_objects(cv_instance, 'experience', Experience, validated_data)
+        self._create_related_objects(cv_instance, 'skills', Skill, validated_data)
+        self._create_related_objects(cv_instance, 'projects', Project, validated_data)
 
-        skills_data = validated_data.pop('skills', None)
-        skills = [SkillSerializer.create(SkillSerializer(), validated_data=skill) for skill in
-                  skills_data] if skills_data else None
+        return cv_instance
 
-        projects_data = validated_data.pop('projects', None)
-        projects = [ProjectSerializer.create(ProjectSerializer(), validated_data=project) for project in
-                    projects_data] if projects_data else None
+    def _create_personal_info(self, personal_info_data):
+        if personal_info_data:
+            return PersonalInfo.objects.create(**personal_info_data)
+        return None
 
-        cv = CV.objects.create(personal_info=personal_info, **validated_data)
-        if education:
-            cv.education.set(education)
-        if experience:
-            cv.experience.set(experience)
-        if skills:
-            cv.skills.set(skills)
-        if projects:
-            cv.projects.set(projects)
-        return cv
+    def _create_related_objects(self, cv_instance, field_name, model_class, validated_data):
+        related_data = validated_data.pop(field_name, [])
+        related_objects = [model_class(cv=cv_instance, **data) for data in related_data]
+        model_class.objects.bulk_create(related_objects)
