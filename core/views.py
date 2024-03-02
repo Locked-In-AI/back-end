@@ -2,6 +2,8 @@ from rest_framework import viewsets
 from .models import PersonalInfo, Education, Experience, Skill, Project, CV
 from .serializers import PersonalInfoSerializer, EducationSerializer, ExperienceSerializer, SkillSerializer, \
     ProjectSerializer, CVSerializer
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import User
 
 
 class PersonalInfoViewSet(viewsets.ModelViewSet):
@@ -32,3 +34,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
 class CVViewSet(viewsets.ModelViewSet):
     queryset = CV.objects.all()
     serializer_class = CVSerializer
+
+
+class UserCVViewSet(viewsets.ModelViewSet):
+    serializer_class = CVSerializer
+
+    def get_queryset(self):
+        user = get_object_or_404(User, username=self.kwargs['username'])
+        return CV.objects.filter(user=user)
