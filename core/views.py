@@ -1,13 +1,12 @@
+from django.shortcuts import get_list_or_404
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .permissions import AdminOrOwnerPermission
 
 from .models import PersonalInfo, Education, Experience, Skill, Project, CV
+from .permissions import AdminOrOwnerPermission
 from .serializers import PersonalInfoSerializer, EducationSerializer, ExperienceSerializer, SkillSerializer, \
     ProjectSerializer, CVSerializer
-from django.shortcuts import get_object_or_404, get_list_or_404
-from django.contrib.auth.models import User
 
 
 class PersonalInfoViewSet(viewsets.ModelViewSet):
@@ -43,10 +42,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
 class CVViewSet(viewsets.ModelViewSet):
     queryset = CV.objects.all()
     serializer_class = CVSerializer
-    #permission_classes = (AdminOrOwnerPermission,)
+    permission_classes = (AdminOrOwnerPermission,)
 
     def get_queryset(self):
-        return get_list_or_404(CV, user=self.request.user) if self.request.user else None
+        user = self.request.user
+        return CV.objects.filter(user=user)
 
 
 class OptimizeCVViewSet(APIView):
