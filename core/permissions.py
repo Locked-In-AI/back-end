@@ -1,7 +1,7 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import IsAuthenticated
 
 
-class AdminOrOwnerPermission(BasePermission):
+class AdminOrOwnerPermission(IsAuthenticated):
     def has_object_permission(self, request, view, obj):
         return bool(
             request.user and (
@@ -9,8 +9,3 @@ class AdminOrOwnerPermission(BasePermission):
                     request.user == getattr(obj, 'user', None)
             )
     )
-
-    def has_permission(self, request, view):
-        return bool(
-            request.user
-        )

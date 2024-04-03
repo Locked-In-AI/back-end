@@ -40,6 +40,25 @@ class CVSerializer(serializers.ModelSerializer):
     skills = SkillSerializer(many=True, required=False)
     projects = ProjectSerializer(many=True, required=False)
 
+    def update(self, instance, validated_data):
+        # TODO: fix this
+        education_data = validated_data.pop('education')
+        experience_data = validated_data.pop('experience')
+        skill_data = validated_data.pop('skill')
+        project_data = validated_data.pop('project')
+
+        instance.education.set(Education.objects.filter(id__in=[item['id'] for item in education_data]))
+        instance.experience.set(Experience.objects.filter(id__in=[item['id'] for item in experience_data]))
+        instance.skill.set(Skill.objects.filter(id__in=[item['id'] for item in skill_data]))
+        instance.project.set(Project.objects.filter(id__in=[item['id'] for item in project_data]))
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
+
+
     class Meta:
         model = CV
         fields = '__all__'
