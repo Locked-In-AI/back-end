@@ -17,4 +17,4 @@ class JobApplication(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f'{self.job_title} + " at " + {self.company_name}'
+        return f'{self.job_title} at {self.company_name}'
