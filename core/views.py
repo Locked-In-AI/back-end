@@ -50,9 +50,15 @@ class CVViewSet(viewsets.ModelViewSet):
 
 
 class OptimizeCVViewSet(APIView):
+    permission_classes = (AdminOrOwnerPermission,)
 
     def post(self, request, *args, **kwargs):
         description = request.data.get('description', "")
 
         if not description:
             return Response({"error": "Description is required."}, status=status.HTTP_400_BAD_REQUEST)
+        processed_description = self.optimize_description(description)
+        return Response({"processed_description": processed_description}, status=status.HTTP_200_OK)
+
+    def optimize_description(self, description):
+        return description.upper()

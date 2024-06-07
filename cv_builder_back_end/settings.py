@@ -32,7 +32,7 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': 'debug.log',
+            'filename': 'logs/debug.log',
         },
     },
     'root': {
