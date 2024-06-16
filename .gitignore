@@ -5,3 +5,4 @@ migrations
 logs
 static
 media
+private_key.pem

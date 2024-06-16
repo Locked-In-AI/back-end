@@ -1,9 +1,9 @@
+import os
 from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -20,9 +20,21 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
+private_key_path = os.getenv('PRIVATE_KEY_PATH')
+public_key_path = os.getenv('PUBLIC_KEY_PATH')
+
+with open(private_key_path, 'r') as file:
+    private_key = file.read()
+
+with open(public_key_path, 'r') as file:
+    public_key = file.read()
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ALGORITHM': 'RS256',
+    'SIGNING_KEY': private_key,
+    'VERIFYING_KEY': public_key
 }
 
 LOGGING = {
@@ -40,7 +52,6 @@ LOGGING = {
         'level': 'INFO',
     }
 }
-
 
 # Application definition
 
@@ -91,7 +102,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'cv_builder_back_end.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
@@ -101,7 +111,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -121,14 +130,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
 }
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
@@ -140,7 +147,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
